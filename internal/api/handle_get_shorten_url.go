@@ -11,7 +11,7 @@ func HandleGetShortenUrl(db map[string]string) http.HandlerFunc {
 		var code = chi.URLParam(r, "code")
 		data, ok := db[code]
 		if !ok {
-			SendJson(w, Response{Error: "db invalid url"}, http.StatusBadRequest)
+			SendJson(w, Response{Error: "invalid url"}, http.StatusBadRequest)
 			return
 		}
 		SendJson(w, Response{Data: data}, http.StatusOK)
