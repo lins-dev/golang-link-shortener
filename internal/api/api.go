@@ -5,6 +5,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/lins-dev/golang-link-shortener.git/internal/repository"
 )
 
 type Response struct {
@@ -16,7 +17,7 @@ type PostBody struct {
 	URL string `json:"url,omitempty"`
 }
 
-func NewHandler(db map[string]string) http.Handler {
+func NewHandler(repository repository.Repository) http.Handler {
 	r := chi.NewMux()
 
 	r.Route("/api", func(r chi.Router) {
@@ -26,8 +27,8 @@ func NewHandler(db map[string]string) http.Handler {
 		r.Use(middleware.RealIP)
 
 		r.Route("/url", func(r chi.Router) {
-			r.Get("/{code}", HandleGetShortenUrl(db))
-			r.Post("/shorten", HandlePostShortUrl(db))
+			r.Get("/{code}", HandleGetShortenUrl(repository))
+			r.Post("/shorten", HandlePostShortUrl(repository))
 		})
 	})
 

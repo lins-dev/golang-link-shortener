@@ -2,11 +2,16 @@ package api
 
 import (
 	"encoding/json"
+	"errors"
+	"log/slog"
 	"net/http"
 	"net/url"
+
+	"github.com/lins-dev/golang-link-shortener.git/internal/repository"
+	"github.com/redis/go-redis/v9"
 )
 
-func HandlePostShortUrl(db map[string]string) http.HandlerFunc {
+func HandlePostShortUrl(repository repository.Repository) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var body PostBody
 		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
@@ -18,8 +23,16 @@ func HandlePostShortUrl(db map[string]string) http.HandlerFunc {
 			return
 		}
 		
-		code := GenerateCode()
-		db[code] = body.URL
+		code, err := repository.StoreShortenedUrl(r.Context(), body.URL)
+		if err != nil {
+			if errors.Is(err, redis.Nil) {
+				SendJson(w, Response{Error: "code not found"}, http.StatusNotFound)
+				return
+			}
+			slog.Error("failed to store url", "error", err)
+			SendJson(w, Response{Error: "internal server error"}, http.StatusInternalServerError)
+			return
+		}
 		SendJson(w, Response{Data: code}, http.StatusCreated)
 	}
 }

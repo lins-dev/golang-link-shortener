@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"github.com/lins-dev/golang-link-shortener.git/internal/api"
+	"github.com/lins-dev/golang-link-shortener.git/internal/repository"
+	"github.com/redis/go-redis/v9"
 )
 
 func main()  {
@@ -17,8 +19,12 @@ func main()  {
 }
 
 func run() error {
-	fakeDb := make(map[string]string)
-	handler := api.NewHandler(fakeDb)
+	// db := make(map[string]string)
+	connection := redis.NewClient(&redis.Options{
+		Addr: "localhost:6379",
+	})
+	repository := repository.NewRepository(connection)
+	handler := api.NewHandler(repository)
 	server := http.Server{
 		ReadTimeout: 10*time.Second,
 		IdleTimeout: time.Second,
